@@ -1,7 +1,21 @@
 import requests
+import re
 import pandas as pd
 from tqdm import tqdm
 from bs4 import BeautifulSoup as bs
+
+def extract_page_count(html_string):
+    # First, remove the HTML tags
+    cleaned_string = re.sub(r'<[^>]+>', '', html_string)
+    
+    # Search for the pattern "Page X of Y" to extract the total page count
+    match = re.search(r'Page\s\d+\s*of\s*(\d+)', cleaned_string)
+    
+    # If a match is found, return the total page count as an integer
+    if match:
+        return int(match.group(1))  # The total page count is captured in group(1)
+    else:
+        return None  # Return None if no match is found
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_colwidth', None)
@@ -19,17 +33,19 @@ big_list = []
 #Foreach postcode
 #Poll postcode search page for no. of properties 
 #Foreach page, loop below
-for x in tqdm(range(1, 252)):
-    soup = bs(s.get(f'https://www.propertypal.com/property-for-sale/northern-ireland/page-{x}').text, 'html.parser')
+soup = bs(s.get(f'https://www.propertypal.com/property-for-sale/bt1').text, 'html.parser')
+pagesString = str(soup.findAll(class_ = "sc-bbce18de-5 lkNuoZ"))
+pages = extract_page_count(pagesString)
+print(pages)
+#for x in tqdm(range(1, 252)):
 #     print(soup)
-    properties = soup.select('li.pp-property-box')
-    i = int(0)
-    for p in properties:
-        name = p.select_one('h2').get_text(strip=True) if p.select_one('h2') else None
-        url = 'https://www.propertypal.com' + p.select_one('a').get('href') if p.select_one('a') else None
-        price = p.select_one('p.pp-property-price').get_text(strip=True) if p.select_one('p.pp-property-price') else None
-        big_list.append((name, price, url))
-        i = i + 1
-    print(i)
-big_df = pd.DataFrame(big_list, columns = ['Property', 'Price', 'Url'])
-print(big_df)
+    #properties = soup.select('li.pp-property-box')
+    #for p in properties:
+        #name = p.select_one('h2').get_text(strip=True) if p.select_one('h2') else None
+        #url = 'https://www.propertypal.com' + p.select_one('a').get('href') if p.select_one('a') else None
+        #price = p.select_one('p.pp-property-price').get_text(strip=True) if p.select_one('p.pp-property-price') else None
+        #big_list.append((name, price, url))
+    #print(i)
+#big_df = pd.DataFrame(big_list, columns = ['Property', 'Price', 'Url'])
+#print(big_df)
+
