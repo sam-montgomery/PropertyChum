@@ -27,25 +27,29 @@ headers = {
     'sec-fetch-mode': 'navigate',
     'sec-fetch-site': 'same-origin'
 }
+
 s = requests.Session()
 s.headers.update(headers)
 big_list = []
+postcodes = [1,2,7,15,8,3,6,4,5,16]
+
 #Foreach postcode
-#Poll postcode search page for no. of properties 
-#Foreach page, loop below
-soup = bs(s.get(f'https://www.propertypal.com/property-for-sale/bt1').text, 'html.parser')
-pagesString = str(soup.findAll(class_ = "sc-bbce18de-5 lkNuoZ"))
-pages = extract_page_count(pagesString)
-print(pages)
-#for x in tqdm(range(1, 252)):
-#     print(soup)
-    #properties = soup.select('li.pp-property-box')
-    #for p in properties:
-        #name = p.select_one('h2').get_text(strip=True) if p.select_one('h2') else None
-        #url = 'https://www.propertypal.com' + p.select_one('a').get('href') if p.select_one('a') else None
-        #price = p.select_one('p.pp-property-price').get_text(strip=True) if p.select_one('p.pp-property-price') else None
-        #big_list.append((name, price, url))
-    #print(i)
-#big_df = pd.DataFrame(big_list, columns = ['Property', 'Price', 'Url'])
-#print(big_df)
+for bt in postcodes:
+    #Poll postcode search page for no. of properties
+    soup = bs(s.get(f'https://www.propertypal.com/property-for-sale/bt{bt}').text, 'html.parser')
+    pagesString = str(soup.findAll(class_ = "sc-bbce18de-5 lkNuoZ"))
+    pages = int(extract_page_count(pagesString))
+    print(f'BT{bt}: {pages} pages found.')
+    for x in tqdm(range(1, (pages + 1))):
+        #Foreach page, loop below
+        soup = bs(s.get(f'https://www.propertypal.com/property-for-sale/bt{bt}/page-{x}').text, 'html.parser')
+        properties = soup.select('li.pp-property-box')
+        for p in properties:
+            name = p.select_one('h2').get_text(strip=True) if p.select_one('h2') else None
+            url = 'https://www.propertypal.com' + p.select_one('a').get('href') if p.select_one('a') else None
+            price = p.select_one('p.pp-property-price').get_text(strip=True) if p.select_one('p.pp-property-price') else None
+            big_list.append((name, price, url)) 
+
+big_df = pd.DataFrame(big_list, columns = ['Property', 'Price', 'Url'])
+print(big_df)
 
